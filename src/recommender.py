@@ -80,6 +80,57 @@ def load_songs(csv_path: str) -> List[Dict]:
 
     return songs
 
+def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, str]:
+    """
+    Scores one song against a user's preferences on a 0-10 scale.
+
+    Weights:
+    - genre exact match: 3.0
+    - mood exact match: 2.0
+    - energy closeness: up to 2.5
+    - acousticness closeness: up to 1.5
+    - danceability closeness: up to 1.0
+    """
+    score = 0.0
+    reasons: List[str] = []
+
+    # Categorical exact-match points.
+    if str(song.get("genre", "")).lower() == str(user_prefs.get("genre", "")).lower():
+        score += 3.0
+        reasons.append("genre match (+3.0)")
+    else:
+        reasons.append("genre no match (+0.0)")
+
+    if str(song.get("mood", "")).lower() == str(user_prefs.get("mood", "")).lower():
+        score += 2.0
+        reasons.append("mood match (+2.0)")
+    else:
+        reasons.append("mood no match (+0.0)")
+
+    # Numeric closeness points: points = weight * max(0, 1 - |song - user|)
+    energy_sim = max(0.0, 1.0 - abs(float(song.get("energy", 0.0)) - float(user_prefs.get("energy", 0.0))))
+    energy_points = 2.5 * energy_sim
+    score += energy_points
+    reasons.append(f"energy closeness (+{energy_points:.2f})")
+
+    acoustic_sim = max(
+        0.0,
+        1.0 - abs(float(song.get("acousticness", 0.0)) - float(user_prefs.get("acousticness", 0.0))),
+    )
+    acoustic_points = 1.5 * acoustic_sim
+    score += acoustic_points
+    reasons.append(f"acousticness closeness (+{acoustic_points:.2f})")
+
+    dance_sim = max(
+        0.0,
+        1.0 - abs(float(song.get("danceability", 0.0)) - float(user_prefs.get("danceability", 0.0))),
+    )
+    dance_points = 1.0 * dance_sim
+    score += dance_points
+    reasons.append(f"danceability closeness (+{dance_points:.2f})")
+
+    return round(score, 2), "; ".join(reasons)
+
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
     """
     Functional implementation of the recommendation logic.
