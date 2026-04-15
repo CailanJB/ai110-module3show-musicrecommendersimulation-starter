@@ -37,9 +37,11 @@ class Recommender:
     Required by tests/test_recommender.py
     """
     def __init__(self, songs: List[Song]):
+        """Stores the song catalog used for recommendations."""
         self.songs = songs
 
     def recommend(self, user: UserProfile, k: int = 5) -> List[Song]:
+        """Returns the top-k songs ranked by match score for a user profile."""
         if k <= 0 or not self.songs:
             return []
 
@@ -52,14 +54,13 @@ class Recommender:
         return [song for song, _ in scored_songs[:k]]
 
     def explain_recommendation(self, user: UserProfile, song: Song) -> str:
+        """Generates a human-readable explanation for a song's score."""
         prefs = _prefs_from_user_profile(user)
         _, explanation = score_song(prefs, asdict(song))
         return explanation
 
 def _prefs_from_user_profile(user: UserProfile) -> Dict:
-    """
-    Converts UserProfile into the preference dictionary expected by score_song.
-    """
+    """Converts a UserProfile into the dict format expected by score_song."""
     return {
         "genre": user.favorite_genre,
         "mood": user.favorite_mood,
@@ -69,9 +70,7 @@ def _prefs_from_user_profile(user: UserProfile) -> Dict:
     }
 
 def _song_from_dict(song_dict: Dict) -> Song:
-    """
-    Builds a Song dataclass from a song dictionary.
-    """
+    """Builds a Song dataclass instance from a song dictionary."""
     return Song(
         id=int(song_dict["id"]),
         title=str(song_dict["title"]),
@@ -86,9 +85,7 @@ def _song_from_dict(song_dict: Dict) -> Song:
     )
 
 def _user_profile_from_prefs(user_prefs: Dict) -> UserProfile:
-    """
-    Converts functional user preferences into UserProfile for OOP helpers.
-    """
+    """Converts functional preference data into a UserProfile instance."""
     acoustic_pref = user_prefs.get("acousticness", 0.5)
     if isinstance(acoustic_pref, bool):
         likes_acoustic = acoustic_pref
@@ -103,10 +100,7 @@ def _user_profile_from_prefs(user_prefs: Dict) -> UserProfile:
     )
 
 def load_songs(csv_path: str) -> List[Dict]:
-    """
-    Loads songs from a CSV file.
-    Required by src/main.py
-    """
+    """Loads songs from CSV and returns them as typed dictionaries."""
     songs: List[Dict] = []
     path = Path(csv_path)
 
@@ -136,16 +130,7 @@ def load_songs(csv_path: str) -> List[Dict]:
     return songs
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, str]:
-    """
-    Scores one song against a user's preferences on a 0-10 scale.
-
-    Weights:
-    - genre exact match: 3.0
-    - mood exact match: 2.0
-    - energy closeness: up to 2.5
-    - acousticness closeness: up to 1.5
-    - danceability closeness: up to 1.0
-    """
+    """Computes a 0-10 match score and explanation for one song."""
     score = 0.0
     reasons: List[str] = []
 
@@ -187,10 +172,7 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, str]:
     return round(score, 2), "; ".join(reasons)
 
 def recommend_songs(user_prefs: Dict, songs: List[Dict], k: int = 5) -> List[Tuple[Dict, float, str]]:
-    """
-    Functional implementation of the recommendation logic.
-    Required by src/main.py
-    """
+    """Returns top-k song recommendations as (song, score, explanation) tuples."""
     if k <= 0 or not songs:
         return []
 
