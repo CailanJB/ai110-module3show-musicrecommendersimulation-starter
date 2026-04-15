@@ -13,10 +13,77 @@ Your goal is to:
 
 Replace this paragraph with your own summary of what your version does.
 
----
+Modern recomender systems use a mix of signalks like behavioral signals like recording songs skipped, replayed, lked, or saved. They use item understanding like tempo, energy, speech, langugae, genre, to provide the best recomednations based on users preferences.
+
+Our System:
+Our content-based recomender will use a content-based filtering approach that uses song attributes to predict what users will love next. The flow is as follows: Our recomender compares each song to a user taste profile and scores how closely the song matches that profile using a mathematical formula with genre matchm mood match, acoustic preferences, and energy closeness so songs are rewarded for being near the users target values. The formula to calculate this is as follows: score = (genre match score + mood match + score + energy match score + acoustic prefernce score + dancebillity score). 
+the scores for each category are calculated as follows: let similarity =  1 - (song category score - user profile category score) for each category. points = weight * (similarity)
+Overview: compute per category points for each song related to user profile then add the points. if the scores between the song and user are an exact match provide +2.5 points if not caluclate using formula above. 
+
+Our system priortizes the mood and energy first since in my opinion is what makes someone like specific songs. The final scores for all songs are ranked from worst to best and the top k songs are returned as recomendations. 
 
 ## How The System Works
+Here is an Overview for the recomendation system:
+1. Start with user preferences
+2. Read the users targets values(most prefered categories)(example prefernces values not every user will have)
+    - genre: 0.444
+    - mood: 0.23
+    - energy: 0.40
+    - acousticness: 0.24
+    - dancebility: 0.30
+3. Compare user profile to each song in dataset
+4. score each song on a sacle from 0 to 10.
+5. If user category and song category are an exact match award +3.0 points for that category, else 0 points for categorical data like mood and genre.
+6. For numerical data(energy, acoustiness, danceability compute similarity score using provided formula)
+  - Energy closeness: up to +2.5
+  - Acousticness closeness: up to +1.5
+  - Danceability closeness: up to +1.0
+    - similarity = 1 - absolute difference
+    - absolute different = |category in song weight - user perfernce weight | 
+    - points = weight × similarity
+  7. Add up all the points for each category and that is the score for the song
+  8. sort the songs from highest to lowest score
+  9. take top k songs and these are the recomended songs
 
+Notes: System might prioritze energy closeness since for me energy is one of the biggets factors in liking a song. Therefore system may have bias to those who like energy in songs as the defying factor. 
+Here is the algorithm recipe, end to end:
+
+Start with user preferences:
+Read the user’s target values:
+genre
+mood
+energy
+acousticness
+danceability
+
+Score each song on a 0 to 10 scale
+Give fixed points for category matches:
+Genre exact match: +3.0
+Mood exact match: +2.0
+Give similarity points for numeric features:
+Energy closeness: up to +2.5
+Acousticness closeness: up to +1.5
+Danceability closeness: up to +1.0
+
+Closeness formula for each numeric feature:
+similarity = 1 - absolute difference
+points = weight × similarity
+clamp at minimum 0 if needed
+Build final score and explanation
+Add all points to get one total score per song (max 10.0).
+Save a short explanation of why it scored that way:
+which categories matched
+how close each numeric feature was
+Rank and select recommendations
+Sort songs by score from highest to lowest.
+Return top k songs as recommendations.
+Output each result as:
+song
+score
+explanation
+That is the full recipe: rule-based category points + numeric similarity points, then sort and take top result
+
+scoring: add up all socres for each category. 
 Explain your design in plain language.
 
 Some prompts to answer:
